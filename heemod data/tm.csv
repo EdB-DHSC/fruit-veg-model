@@ -1,0 +1,111 @@
+.model,from,to,prob
+standard,healthy,healthy,C
+standard,healthy,Diabetes,standard_to_Diabetes
+standard,Diabetes,Diabetes,C
+standard,healthy,Colorectal,standard_to_Colorectal
+standard,Diabetes,Colorectal,standard_to_Colorectal
+standard,Colorectal,Colorectal,C
+standard,healthy,COPD,standard_to_COPD
+standard,Colorectal,COPD,standard_to_COPD
+standard,Diabetes,COPD,standard_to_COPD
+standard,COPD,COPD,C
+standard,healthy,Stroke,standard_to_Stroke
+standard,Diabetes,Stroke,standard_to_Stroke * diabetes_uplift_stroke
+standard,COPD,Stroke,standard_to_Stroke
+standard,Colorectal,Stroke,standard_to_Stroke
+standard,Stroke,Stroke,C
+standard,healthy,CHD,standard_to_CHD
+standard,Diabetes,CHD,standard_to_CHD * diabetes_uplift_chd
+standard,Colorectal,CHD,standard_to_CHD
+standard,COPD,CHD,standard_to_CHD
+standard,Stroke,CHD,standard_to_CHD
+standard,CHD,CHD,C
+standard,healthy,Stomach,standard_to_Stomach
+standard,Diabetes,Stomach,standard_to_Stomach
+standard,COPD,Stomach,standard_to_Stomach
+standard,Colorectal,Stomach,standard_to_Stomach
+standard,CHD,Stomach,standard_to_Stomach
+standard,Stroke,Stomach,standard_to_Stomach
+standard,Stomach,Stomach,C
+standard,healthy,Lung,standard_to_Lung
+standard,Diabetes,Lung,standard_to_Lung
+standard,COPD,Lung,standard_to_Lung
+standard,CHD,Lung,standard_to_Lung
+standard,Stomach,Lung,standard_to_Lung
+standard,Colorectal,Lung,standard_to_Lung
+standard,Stroke,Lung,standard_to_Lung
+standard,Lung,Lung,C
+standard,healthy,Premature_Death,healthy_Death * (age<75)
+standard,Diabetes,Premature_Death,Diabetes_Death * (age<75)
+standard,COPD,Premature_Death,COPD_Death * (age<75)
+standard,CHD,Premature_Death,CHD_Death * (age<75)
+standard,Stomach,Premature_Death,Stomach_Death * (age<75)
+standard,Lung,Premature_Death,Lung_Death * (age<75)
+standard,Stroke,Premature_Death,Stroke_Death * (age<75)
+standard,Colorectal,Premature_Death,Colorectal_Death * (age<75)
+standard,Premature_Death,Premature_Death,1
+standard,healthy,Death,healthy_Death * (age >= 75)
+standard,Diabetes,Death,Diabetes_Death * (age >= 75)
+standard,CHD,Death,CHD_Death * (age >= 75)
+standard,COPD,Death,COPD_Death * (age >= 75)
+standard,Stomach,Death,Stomach_Death * (age >= 75)
+standard,Lung,Death,Lung_Death * (age >= 75)
+standard,Stroke,Death,Stroke_Death * (age >= 75)
+standard,Colorectal,Death,Colorectal_Death * (age >= 75)
+standard,Premature_Death,Death,0
+standard,Death,Death,1
+new,healthy,healthy,C
+new,healthy,Diabetes,new_to_Diabetes
+new,Diabetes,Diabetes,C
+new,healthy,Colorectal,new_to_Colorectal
+new,Diabetes,Colorectal,new_to_Colorectal
+new,Colorectal,Colorectal,C
+new,healthy,COPD,new_to_COPD
+new,Colorectal,COPD,new_to_COPD
+new,Diabetes,COPD,new_to_COPD
+new,COPD,COPD,C
+new,healthy,Stroke,new_to_Stroke
+new,Diabetes,Stroke,new_to_Stroke * diabetes_uplift_stroke
+new,COPD,Stroke,new_to_Stroke
+new,Colorectal,Stroke,new_to_Stroke
+new,Stroke,Stroke,C
+new,healthy,CHD,new_to_CHD
+new,Diabetes,CHD,new_to_CHD * diabetes_uplift_chd
+new,Colorectal,CHD,new_to_CHD
+new,COPD,CHD,new_to_CHD
+new,Stroke,CHD,new_to_CHD
+new,CHD,CHD,C
+new,healthy,Stomach,new_to_Stomach
+new,Diabetes,Stomach,new_to_Stomach
+new,COPD,Stomach,new_to_Stomach
+new,Colorectal,Stomach,new_to_Stomach
+new,CHD,Stomach,new_to_Stomach
+new,Stroke,Stomach,new_to_Stomach
+new,Stomach,Stomach,C
+new,healthy,Lung,new_to_Lung
+new,Diabetes,Lung,new_to_Lung
+new,COPD,Lung,new_to_Lung
+new,CHD,Lung,new_to_Lung
+new,Stomach,Lung,new_to_Lung
+new,Colorectal,Lung,new_to_Lung
+new,Stroke,Lung,new_to_Lung
+new,Lung,Lung,C
+new,healthy,Premature_Death,healthy_Death * (age<75)
+new,Diabetes,Premature_Death,Diabetes_Death * (age<75)
+new,COPD,Premature_Death,COPD_Death * (age<75)
+new,CHD,Premature_Death,CHD_Death * (age<75)
+new,Stomach,Premature_Death,Stomach_Death * (age<75)
+new,Lung,Premature_Death,Lung_Death * (age<75)
+new,Stroke,Premature_Death,Stroke_Death * (age<75)
+new,Colorectal,Premature_Death,Colorectal_Death * (age<75)
+new,Premature_Death,Premature_Death,1
+new,healthy,Death,healthy_Death * (age >= 75)
+new,Diabetes,Death,Diabetes_Death * (age >= 75)
+new,CHD,Death,CHD_Death * (age >= 75)
+new,COPD,Death,COPD_Death * (age >= 75)
+new,Stomach,Death,Stomach_Death * (age >= 75)
+new,Lung,Death,Lung_Death * (age >= 75)
+new,Stroke,Death,Stroke_Death * (age >= 75)
+new,Colorectal,Death,Colorectal_Death * (age >= 75)
+new,Premature_Death,Death,0
+new,Death,Death,1

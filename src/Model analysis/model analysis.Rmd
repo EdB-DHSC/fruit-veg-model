@@ -1,0 +1,226 @@
+---
+title: "Calorie Model Analysis"
+author: "Healthy Weight, Food & Nutrition Analysis"
+date: "`r format(Sys.Date(),'%d %B %Y') `"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+
+`r if(more == FALSE) {"<!--"}`
+This report gives a summary analysis of the fruit & vegetable model, **`r model$name`** run at **`r system_time`** with run timings given in table 1. The policy modeled gives a total economic health benefit, in discounted GBP, of **£`r benifit_num` million**, increases the undiscounted total QALY count by **`r qaly_count_undis`** (`r qaly_count` discounted at the health discount rate of 1.5%) and results in approximately **`r overall_death_state_counts %>% filter(State == 'Premature Death') %>% select('Approximate change in state population due to the policy') %>% as.character() %>% str_remove('-')`** fewer premature deaths (deaths of individuals under the age of 75) in the model cohort.
+`r if(more == FALSE) {"-->"}`
+
+`r if(more == TRUE) {"<!--"}`
+This report gives a summary analysis of the fruit & vegetable model, **`r model$name`** run at **`r system_time`** with run timings given in table 1. The policy modeled gives a total economic health cost, in discounted GBP, of **£`r benifit_num` million** and decreases the undiscounted total QALY count by **`r qaly_count_undis`** (`r qaly_count` discounted at the health discount rate of 1.5%) and results in approximately **`r overall_death_state_counts %>% filter(State == 'Premature Death') %>% select('Approximate change in state population due to the policy') %>% as.character() %>% str_remove('-')`** more premature deaths (deaths of individuals under the age of 75) in the model cohort.
+`r if(more == TRUE) {"-->"}`
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.align='center',fig.cap='Table 1. Model run time'}
+model$timings %>% 
+  kable(align=rep('c',2),row.names = FALSE) %>% 
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 12,full_width = FALSE) 
+
+```
+
+This report is based on fruit & vegetable model **version 0.1**.
+
+# Model Details
+
+The fruit and vegetable consumption increase assumptions of the policy are given in table 2:
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.align='center'}
+#if(model$bmi_targeting == 'no'){
+ model$fnv %>% 
+#   select(-bmi_cut) %>% 
+#   distinct() %>% 
+  mutate(Sex = str_replace(Sex,'1','Male'),
+         Sex = str_replace(Sex,'2','Female')) %>% 
+  spread(Sex,fnv) %>%
+  arrange(age_cat) %>% 
+  mutate(age_cat = str_replace(age_cat,'^1$','5 - 10'),
+         age_cat = str_replace(age_cat,'^2$','11 - 18'),
+         age_cat = str_replace(age_cat,'^3$','19 - 64'),
+         age_cat = str_replace(age_cat,'^4$','65+')) %>% 
+  rename('Age Category' = age_cat) %>%  # REORDER AGE RANGES
+  kable(align=rep('c',3),row.names = FALSE) %>% 
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 12,full_width = FALSE) %>% 
+    add_footnote(c('Figures are in portions (80g fresh)',
+                   'Figures are a per person, per day f&v consumption increase'),
+                   notation = 'number') 
+# } else {
+#    model$kcal %>% 
+#    mutate(Sex = str_replace(Sex,'1','Male'),
+#          Sex = str_replace(Sex,'2','Female')) %>% 
+#   spread(Sex,kcal) %>% 
+#   arrange(age_cat,bmi_cut) %>% 
+#   mutate(age_cat = str_replace(age_cat,'^1$','5 - 10'),
+#          age_cat = str_replace(age_cat,'^2$','11 - 18'),
+#          age_cat = str_replace(age_cat,'^3$','19 - 64'),
+#          age_cat = str_replace(age_cat,'^4$','65+'),
+#          bmi_cut = str_replace(bmi_cut,'1','underweight'),
+#          bmi_cut = str_replace(bmi_cut,'2','healthy weight'),
+#          bmi_cut = str_replace(bmi_cut,'3','overweight'),
+#          bmi_cut = str_replace(bmi_cut,'4','obese'),
+#          bmi_cut = str_replace(bmi_cut,'5','very obese')) %>% 
+#   rename('Age Category' = age_cat) %>% 
+#   rename('BMI Category' = bmi_cut) %>% # REORDER AGE RANGES
+#   kable(align=rep('c',4),row.names = FALSE) %>% 
+#     kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 12,full_width = FALSE) %>% 
+#     add_footnote(c('Figures are in kcal',
+#                    'Figures are a per person, per day calorie reduction'),
+#                   notation = 'number') 
+#}
+```
+
+`r if(!max(treat$initial_age) > 19) {"<!--"}`
+The model simulates a policy that targets the **whole population** with a policy lifetime of **`r model$policy_lifetime` years**. The model evaluates the policy over a period of **`r model$model_runs$cycles` years** and includes **`r population_size_formatted` million** people in the model cohorts (this includes people 'born into' the model for the next `r 5-min(treat$initial_age)` years).
+`r if(!max(treat$initial_age) > 19) {"-->"}`
+
+`r if(!max(treat$initial_age) < 19) {"<!--"}`
+The model simulates a policy that targets **children (<18)** with a policy lifetime of **`r model$policy_lifetime` years**. The model evaluates the policy over a period of **`r model$model_runs$cycles` years** and includes **`r population_size_formatted` million** people in the model cohorts (this includes people 'born into' the model for the next `r model$policy_lifetime` years).
+`r if(!max(treat$initial_age) < 19) {"-->"}`
+
+A policy lifetime of `r model$policy_lifetime` years means that new cohorts are 'born into' the model, and so into the policy, for the next `r model$policy_lifetime` years. However the effect of the policy is considered permanent for all these cohorts, the policy lifetime of `r model$policy_lifetime` years does not mean that after `r model$policy_lifetime` years the policy effect is removed from the individuals in the treatment cohorts.
+
+# Model States
+
+All individuals enter the model in the healthy state, the populations of the states then evolve during the model run as shown in figure 1:
+
+```{r state-evolution,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.cap='Fig 1. State evolution through a model run',fig.align='center'}
+state_evolution
+```
+
+The policy being modeled will change the number of individuals who develop a disease due to low fruit and vegetable consumption and so die due to a fruit and vegetable consumption related disease. The change the policy makes to the number of deaths is given in table 3:
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.align='center',fig.cap='Table 3. Change in the total number of death types due to the policy modelled'}
+ kable(overall_death_state_counts,align=rep('c', length(overall_death_state_counts))) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 12,full_width = FALSE) %>%
+    add_footnote(c('A positive number indicates an decrease due to the policy.',
+                   'A negative number indicates a increase due to the policy.',
+                   'Absolute figures are rounded to the nearest 1,000',
+                   'Percentage change is rounded to 2 decimal places'),
+                   notation = 'number')
+
+```
+
+`r if(more == FALSE) {"<!--"}`
+This means that the policy results in approximately **`r overall_death_state_counts %>% filter(State == 'Premature Death') %>% select('Approximate change in state population due to the policy') %>% as.character() %>% str_remove('-')`** fewer premature deaths (deaths of individuals under the age of 75) in the model cohort of **`r population_size_formatted` million** during the evaluation period of **`r model$model_runs$cycles` years**.
+`r if(more == FALSE) {"-->"}`
+
+`r if(more == TRUE) {"<!--"}`
+This means that the policy results in approximately **`r overall_death_state_counts %>% filter(State == 'Premature Death') %>% select('Approximate change in state population due to the policy') %>% as.character() %>% str_remove('-')`** more premature deaths (deaths of individuals under the age of 75) in the model cohort of **`r population_size_formatted` million** during the evaluation period of **`r model$model_runs$cycles` years**.
+`r if(more == TRUE) {"-->"}`
+
+`r if(more == FALSE) {"<!--"}`
+The policy being modeled will change the number of individuals who develop a disease due to low fruit and vegetable consumption. The table below gives the number of years not spent in a disease state and the resulting morbidity QALY gain.
+`r if(more == FALSE) {"-->"}`
+
+`r if(more == TRUE) {"<!--"}`
+The policy being modeled will change the number of individuals who develop a disease due to low fruit and vegetable consumption. The table below gives the number of additional years spent in a disease state and the resulting morbidity QALY loss.
+`r if(more == TRUE) {"-->"}`
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.align='center',fig.cap='Table 4. Change in the total number of years spent in different disease states, due to the policy modelled'}
+ kable(overall_disease_state_counts,align=rep('c', length(overall_disease_state_counts))) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 12,full_width = FALSE) %>%
+    add_footnote(c('A positive number indicates a decrease due to the policy.',
+                   'A negative number indicates an increase due to the policy.',
+                   'Absolute figures are rounded to the nearest 100',
+                   'Assumes that all diseases are in different individuals, no comorbidities'),
+                   notation = 'number')
+
+```
+
+`r if(more == FALSE) {"<!--"}`
+This means that the policy results in approximately **`r morbidity_QALY %>% str_remove('-')`** QALYs (undiscounted) being saved due to the disease morbidity impact in the model cohort of **`r population_size_formatted` million** during the evaluation period of **`r model$model_runs$cycles` years**.
+`r if(more == FALSE) {"-->"}`
+
+`r if(more == TRUE) {"<!--"}`
+This means that the policy results in approximately **`r morbidity_QALY %>% str_remove('-')`** fewer QALYs (undiscounted) due to the disease morbidity impact in the model cohort of **`r population_size_formatted` million** during the evaluation period of **`r model$model_runs$cycles` years**.
+`r if(more == TRUE) {"-->"}`
+
+# Economic Model Effects
+
+`r if(more == FALSE) {"<!--"}`
+The total economic health benefits of the policy modeled, in discounted GBP, is **£`r benifit_num` million**. 
+`r if(more == FALSE) {"-->"}`
+
+`r if(more == TRUE) {"<!--"}`
+The total economic health costs of the policy modeled, in discounted GBP, is **£`r benifit_num` million**. 
+`r if(more == TRUE) {"-->"}`
+
+`r if(!model$nhs_multiplier == "yes") {"<!--"}`
+This total NPV is made up of the 3 economic effects modeled: QALYs, economic output and NHS costs **(multiplied by the NHS opportunity cost of 4.7)**, shown in table 4. Each of these components has been adjusted by the appropriate discount rate to give the approximate present cash value of future benefits, to be consistent with HMT green book guidance. QALYs are valued at £70,000 per QALY and all others use 2019 prices.
+`r if(!model$nhs_multiplier == "yes") {"-->"}`
+
+`r if(!model$nhs_multiplier == "no") {"<!--"}`
+This total NPV is made up of the 3 economic effects modeled: QALYs, economic output and NHS costs, shown in table 4. Each of these components has been adjusted by the appropriate discount rate to give the approximate present cash value of future benefits, to be consistent with HMT green book guidance. QALYs are valued at £70,000 per QALY and all others use 2019 prices.
+`r if(!model$nhs_multiplier == "no") {"-->"}`
+
+`r if(more == FALSE) {"<!--"}`
+The increase in the undiscounted QALY count due to the policy modeled is **`r qaly_count_undis`** (`r qaly_count` discounted at the health discount rate of 1.5%).
+`r if(more == FALSE) {"-->"}`
+
+`r if(more == TRUE) {"<!--"}`
+The decrease in the undiscounted QALY count due to the policy modeled is **`r qaly_count_undis`** (`r qaly_count` discounted at the health discount rate of 1.5%).
+`r if(more == TRUE) {"-->"}`
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.align='center',fig.cap='Table 4. The total benefit given by each of the 4 economic effects modelled'}
+benifit_breakdown %>% 
+  kable(align=rep('c',2),row.names = FALSE) %>% 
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 12,full_width = FALSE) %>% 
+    add_footnote(c('Figures are in millions, rounded to the nearest whole number',
+                   'Figures are discounted to give the approximate present cash value',
+                   'QALY benefits are monetised using the QALY cost of £70,000'),
+                   notation = 'number') 
+
+```
+
+The cumulative sum of these discounted benefits, as they accrue during the model run, is shown in figure 2 and broken down into its 4 individual components in figure 3 and table 5.
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.cap='Fig 2. The total cumulative discounted benefits of the policy',fig.align='center'}
+benifit1
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.cap='Fig 3. The individual cumulative discounted benefits of the policy',fig.align='center'}
+benifitf2
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.align='center',fig.cap='Table 5. The cumulative savings from each of the 4 economic effects modelled'}
+benifit_table %>% 
+  kable(align=rep('c',3),row.names = FALSE) %>% 
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 12,full_width = FALSE) %>% 
+    add_footnote(c('Figures are in millions, rounded to 1 decimal place',
+                   'Figures are a cumulative sum of discounted benefits',
+                   'Figures are discounted to give the approximate present cash value',
+                   'QALY benefits are monetised using the QALY cost of £70,000'),
+                   notation = 'number') 
+
+```
+
+# Fruit & Vegetable Consumption Trajectories
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.cap='Fig 4. The F&V trajectories followed by males in the model',fig.align='center'}
+fv_trajectories
+```
+
+# Caveates
+
++ The model cohorts are calculated from Health Survey for England (HSE) data, all results therefore relate to the English population, demographics and weight distribution.
+
++ The model disease prevalence and mortality are calculated from English data, all results therefore relate to the English public health situation.
+
++ The NHS and economic output costs are calculated based on 2019 prices. These costs may be uprated to reflect current prices using the [GDP deflator](https://www.gov.uk/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-november-2020-spending-review).
+
++ The model does not include all fruit and vegetable consumption related conditions and so benefits may be an underestimate. The conditions included are:
+    + CHD
+    + Sroke
+    + Type 2 Diabetes
+    + COPD
+    + Colorectal Cancer
+    + Lung Cancer
+    + Stomach Cancer
+    
++ The model make no comment on the reasonableness or otherwise of the fruit and vegetable consumption increases given in table 2, this must be assessed using the best available evidence.
+
++ The model makes no comment on regional or demographic variations, the fruit and vegetable consumption increases given in table 2 are applied equally to the entire populations and benefits are given according to national averages. 
